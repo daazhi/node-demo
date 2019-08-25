@@ -1,15 +1,32 @@
+/**
+ * 工具类
+ * author: zhangcz
+ * creteDate: 2019/08/25
+ */
 
-let snowflake = require('../libs/BigInt')
+function Utils () {}
 
-let nextId = () => {
+/**
+ * BigInt类型的ID
+ * @returns {*}
+ */
+let snowflake = null
+Utils.prototype.nextId = () => {
+  snowflake = snowflake || require('../libs/big-int')
   return snowflake.nextId()
 }
 
+// 不足两位，左补零
 let lt9 = v => {
   return v > 9 ? v: ('0' + v)
 }
 
-let transTime = long => {
+/**
+ * 时间转换：毫秒数转换为日期（yyyy-MM-dd HH:mm:ss）
+ * @param long
+ * @returns {string}
+ */
+Utils.prototype.transTime = long => {
   if (!long) return ''
 
   let date = new Date(long)
@@ -24,33 +41,37 @@ let transTime = long => {
   return `${year}-${month}-${day} ${hour}:${minutes}:${second}`
 }
 
-
-let ok = r => {
+/**
+ * 接口返回成功数据
+ * @param result
+ * @returns {object}
+ */
+Utils.prototype.ok = result => {
   let map = {code: 0, message: 'success'}
-  if (!r) {
-    return map
-  }
 
-  if (typeof r === 'string') {
-    map.message = r
+  if (typeof result === 'string') {
+    map.message = result
   } else {
-    map.data = r
+    map.data = result || {}
   }
   return map
 }
 
-let error = r => {
-  let map = {code: -1, message: 'error'}
-  if (!r) {
-    return map
-  }
-
-  if (typeof r === 'string') {
-    map.message = r
-  }
+/**
+ * 接口返回失败数据
+ * @param errMsg
+ * @returns {object}
+ */
+Utils.prototype.error = errMsg => {
+  let map = {code: -1, message: errMsg || 'error'}
   return map
 }
 
-let utils = {nextId, transTime, ok, error}
+let utils = null
 
-module.exports = utils
+let Init = () => {
+  utils = utils || new Utils()
+  return utils
+}
+
+module.exports = Init()

@@ -1,0 +1,129 @@
+<html>
+
+<head>
+    <title>Api preview page</title>
+    <link rel="stylesheet" href="./stylesheets/style.css">
+    <link rel="icon" href="./images/api.png">
+    <!--<script src="./javascripts/require.js"></script>-->
+    <script src="./javascripts/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+
+    <div class="main">
+        <h1></h1>
+        <div id="container"></div>
+    </div>
+
+</body>
+
+<script>
+
+  function init(router_conf) {
+
+    let appName = router_conf.appName
+    let appVer = router_conf.appVer
+
+    $('.main').find('h1').text(`${appName} 接口列表 (version:${appVer})`)
+
+    let parents = []
+    for (let key in router_conf) {
+      let childs = []
+      let apis = router_conf[key]
+
+      if (typeof apis === 'string') {
+        continue
+      }
+
+      apis.map((item, index) => {
+        let type = item.type
+        let path = item.path
+        let childTemplate =
+          `<div class="child">
+            <p>
+              <span class="index">${index + 1}</span>
+              <span class="type ${type.toUpperCase() == 'GET' ? 'get' : 'post'}">${type.toUpperCase()}</span>
+              <span class="url" data-expand="1" onclick="expandItem(this)">${path}</span>
+              <a class="button" onclick="testApi(this, '${path}', '${type}')">Try</a>
+            </p>
+            参数：
+            <textarea></textarea>
+            响应：
+            <p class="result"></p>
+          </div>`
+        childs.push(childTemplate)
+      })
+
+      childs = childs.join('')
+
+      let pExpand = parents.length == 0 ? 2 : 1
+      let pExpandStyle = parents.length == 0 ? ' style="height: auto"' : ''
+
+      let parentTemplate =
+        `<div class="parent" ${pExpandStyle}>
+          <h2 data-expand="${pExpand}" onclick="expandItem(this, 1)">${key}</h2>
+          ${childs}
+        </div>`
+      parents.push(parentTemplate)
+    }
+
+    $('#container').html(parents.join(''))
+  }
+
+  let expandItem = (el, isFirstLayer) => {
+    el = $(el)
+    let pEl = isFirstLayer ? el.parent() : el.parents('.child')
+    let height = isFirstLayer ? '60px' : '50px'
+    let tryEl = isFirstLayer ? null : el.next()
+    let expand = el.data('expand')
+    if (expand == 1) {
+      el.data('expand', '2')
+      pEl.css('height', 'auto')
+      tryEl && tryEl.css('display', 'inline-block')
+    } else if (expand == 2) {
+      el.data('expand', '1')
+      pEl.css('height', height)
+      tryEl && tryEl.css('display', 'none')
+    }
+  }
+
+  let testApi = (el, url, type) => {
+
+    let resultEl = $(el).parents('.child').find('.result')
+
+    let params = $(el).parent().next().val() || '{}'
+    try {
+      params = JSON.parse(params)
+    } catch (e) {
+      resultEl.html(e.message)
+      return
+    }
+
+    $.ajax({
+      url,
+      type,
+      dataType: 'json',
+      data: params,
+      success: res => {
+        resultEl.html(JSON.stringify(res))
+      }
+    })
+  }
+
+  function getRouterConfig() {
+    $.ajax({
+      url: 'getRouterConfig',
+      type: 'get',
+      success: res => {
+        if (res.code == 0) {
+          init(res.data)
+        }
+      }
+    })
+  }
+
+  getRouterConfig()
+
+</script>
+
+</html>

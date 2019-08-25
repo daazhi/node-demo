@@ -33,9 +33,8 @@ let log4js_config = {
 
 log4js.configure(log4js_config)
 
-
-console.log("log_start start!")
-
 let logger = log4js.getLogger('file')
+
+console.log('-----------  Log is started!  -----------')
 
 module.exports = logger
